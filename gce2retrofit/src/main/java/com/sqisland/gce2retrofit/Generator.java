@@ -261,14 +261,14 @@ public class Generator {
         .emitEmptyLine()
         .emitImports(
             "retrofit.Callback",
-            "retrofit.client.Response",
             "retrofit.http.GET",
             "retrofit.http.POST",
             "retrofit.http.PATCH",
             "retrofit.http.DELETE",
             "retrofit.http.Body",
             "retrofit.http.Path",
-            "retrofit.http.Query");
+            "retrofit.http.Query",
+            "retrofit.http.Header");
 
     if (methodTypes.contains(MethodType.REACTIVE)) {
       javaWriter.emitImports("rx.Observable");
