@@ -299,10 +299,13 @@ public class Generator {
       Writer writer, String methodName, Method method, MethodType methodType) throws IOException {
     ArrayList<String> params = new ArrayList<String>();
 
+    params.add("@Header(\"Authorization\") String authToken");
+
     if (method.request != null) {
       params.add("@Body " + method.request.$ref + " " +
           (method.request.parameterName != null ? method.request.parameterName : "resource"));
     }
+
     for (Entry<String, JsonElement> param : getParams(method)) {
       params.add(param2String(param));
     }
