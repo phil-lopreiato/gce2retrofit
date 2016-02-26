@@ -11,8 +11,12 @@ public class PropertyType {
       return $ref;
     }
 
-    if ("string".equals(type)) {
+    if ("string".equals(type) && format == null) {
       return "String";
+    }
+
+    if ("string".equals(type) && "int64".equals(format)) {
+        return "Integer";
     }
 
     if ("boolean".equals(type)) {
