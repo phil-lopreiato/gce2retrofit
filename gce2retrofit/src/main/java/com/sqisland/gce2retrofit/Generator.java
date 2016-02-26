@@ -268,7 +268,8 @@ public class Generator {
             "retrofit.http.Body",
             "retrofit.http.Path",
             "retrofit.http.Query",
-            "retrofit.http.Header");
+            "retrofit.http.Header",
+            "retrofit.Call");
 
     if (methodTypes.contains(MethodType.REACTIVE)) {
       javaWriter.emitImports("rx.Observable");
@@ -284,6 +285,7 @@ public class Generator {
       Method method = gson.fromJson(entry.getValue(), Method.class);
 
       for (MethodType methodType : methodTypes) {
+        if (methodType == MethodType.ASYNC) continue;
         javaWriter.emitAnnotation(method.httpMethod, "\"/" + method.path + "\"");
         emitMethodSignature(fileWriter, methodName, method, methodType);
       }
@@ -310,23 +312,12 @@ public class Generator {
       params.add(param2String(param));
     }
 
-    String returnValue = "void";
-    if (methodType == MethodType.SYNC && "POST".equals(method.httpMethod)) {
-      returnValue = "Response";
-    }
+    String returnValue = "Call<Void>";
     if (method.response != null) {
       if (methodType == MethodType.SYNC) {
-        returnValue = method.response.$ref;
+        returnValue = "Call<" + method.response.$ref + ">";
       } else if (methodType == MethodType.REACTIVE) {
-        returnValue = "Observable<" + method.response.$ref + ">";
-      }
-    }
-
-    if (methodType == MethodType.ASYNC) {
-      if (method.response == null) {
-        params.add("Callback<Void> cb");
-      } else {
-        params.add("Callback<" + method.response.$ref + "> cb");
+        returnValue = "Call<Observable<" + method.response.$ref + ">>";
       }
     }
 
