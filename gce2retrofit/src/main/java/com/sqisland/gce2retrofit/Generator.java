@@ -112,12 +112,12 @@ public class Generator {
 
     if (discovery.resources != null) {
       generateInterfaceFromResources(
-          writerFactory, packageName, "", discovery.resources, methodTypes);
+          writerFactory, packageName, "", discovery.resources, methodTypes, discovery.name, discovery.version);
     }
 
     if (discovery.name != null && discovery.methods != null) {
       generateInterface(
-          writerFactory, packageName, discovery.name, discovery.methods, methodTypes);
+          writerFactory, packageName, discovery.name, discovery.methods, methodTypes, discovery.name, discovery.version);
     }
   }
 
@@ -223,7 +223,8 @@ public class Generator {
   private static void generateInterfaceFromResources(
       WriterFactory writerFactory, String packageName,
       String resourceName, JsonObject resources, 
-      EnumSet<MethodType> methodTypes)
+      EnumSet<MethodType> methodTypes,
+      String apiName, String apiVersion)
       throws IOException {
     for (Entry<String, JsonElement> entry : resources.entrySet()) {
       JsonObject entryValue = entry.getValue().getAsJsonObject();
@@ -232,14 +233,14 @@ public class Generator {
         generateInterface(writerFactory, packageName,
             resourceName + "_" + entry.getKey(),
             entryValue.get("methods").getAsJsonObject(),
-            methodTypes);
+            methodTypes, apiName, apiVersion);
       }
     
       if (entryValue.has("resources")) {
         generateInterfaceFromResources(writerFactory, packageName,
             resourceName + "_" + entry.getKey(),
             entryValue.get("resources").getAsJsonObject(),
-            methodTypes);
+            methodTypes, apiName, apiVersion);
       }
     }
   }
@@ -247,7 +248,8 @@ public class Generator {
   private static void generateInterface(
       WriterFactory writerFactory, String packageName,
       String resourceName, JsonObject methods,
-      EnumSet<MethodType> methodTypes)
+      EnumSet<MethodType> methodTypes,
+      String apiName, String apiVersion)
       throws IOException {
     String capitalizedName = WordUtils.capitalizeFully(resourceName, '_');
     String className = capitalizedName.replaceAll("_", "");
@@ -286,7 +288,7 @@ public class Generator {
 
       for (MethodType methodType : methodTypes) {
         if (methodType == MethodType.ASYNC) continue;
-        javaWriter.emitAnnotation(method.httpMethod, "\"/" + method.path + "\"");
+        javaWriter.emitAnnotation(method.httpMethod, "\"/_ah/api/" + apiName + "/" + apiVersion + "/" + method.path + "\"");
         emitMethodSignature(fileWriter, methodName, method, methodType);
       }
     }
