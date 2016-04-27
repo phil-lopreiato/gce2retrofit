@@ -112,12 +112,12 @@ public class Generator {
 
     if (discovery.resources != null) {
       generateInterfaceFromResources(
-          writerFactory, packageName, "", discovery.resources, methodTypes);
+          writerFactory, packageName, discovery.basePath, "", discovery.resources, methodTypes);
     }
 
     if (discovery.name != null && discovery.methods != null) {
       generateInterface(
-          writerFactory, packageName, discovery.name, discovery.methods, methodTypes);
+          writerFactory, packageName, discovery.basePath, discovery.name, discovery.methods, methodTypes);
     }
   }
 
@@ -221,22 +221,22 @@ public class Generator {
   }
 
   private static void generateInterfaceFromResources(
-      WriterFactory writerFactory, String packageName,
-      String resourceName, JsonObject resources, 
+      WriterFactory writerFactory, String packageName, String basePath,
+      String resourceName, JsonObject resources,
       EnumSet<MethodType> methodTypes)
       throws IOException {
     for (Entry<String, JsonElement> entry : resources.entrySet()) {
       JsonObject entryValue = entry.getValue().getAsJsonObject();
-      
+
       if (entryValue.has("methods")) {
-        generateInterface(writerFactory, packageName,
+        generateInterface(writerFactory, packageName, basePath,
             resourceName + "_" + entry.getKey(),
             entryValue.get("methods").getAsJsonObject(),
             methodTypes);
       }
-    
+
       if (entryValue.has("resources")) {
-        generateInterfaceFromResources(writerFactory, packageName,
+        generateInterfaceFromResources(writerFactory, packageName, basePath,
             resourceName + "_" + entry.getKey(),
             entryValue.get("resources").getAsJsonObject(),
             methodTypes);
@@ -245,7 +245,7 @@ public class Generator {
   }
 
   private static void generateInterface(
-      WriterFactory writerFactory, String packageName,
+      WriterFactory writerFactory, String packageName, String basePath,
       String resourceName, JsonObject methods,
       EnumSet<MethodType> methodTypes)
       throws IOException {
@@ -260,7 +260,7 @@ public class Generator {
         .emitImports(packageName + ".model.*")
         .emitEmptyLine()
         .emitImports(
-            "retrofit2.Callback",
+            "retrofit2.Call",
             "retrofit2.http.GET",
             "retrofit2.http.POST",
             "retrofit2.http.PATCH",
@@ -284,7 +284,8 @@ public class Generator {
       Method method = gson.fromJson(entry.getValue(), Method.class);
 
       for (MethodType methodType : methodTypes) {
-        javaWriter.emitAnnotation(method.httpMethod, "\"/" + method.path + "\"");
+        String methodPath = basePath + method.path;
+        javaWriter.emitAnnotation(method.httpMethod, "\"" + methodPath + "\"");
         emitMethodSignature(fileWriter, methodName, method, methodType);
       }
     }
@@ -315,18 +316,10 @@ public class Generator {
       returnValue = "Response";
     }
     if (method.response != null) {
-      if (methodType == MethodType.SYNC) {
-        returnValue = method.response.$ref;
+      if (methodType == MethodType.ASYNC) {
+        returnValue = "Call<" + method.response.$ref + ">";
       } else if (methodType == MethodType.REACTIVE) {
-        returnValue = "Observable<" + method.response.$ref + ">";
-      }
-    }
-
-    if (methodType == MethodType.ASYNC) {
-      if (method.response == null) {
-        params.add("Callback<Void> cb");
-      } else {
-        params.add("Callback<" + method.response.$ref + "> cb");
+        returnValue = "Call<Observable<" + method.response.$ref + ">>";
       }
     }
 

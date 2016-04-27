@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 
 public class Discovery {
   public String name;
+  public String basePath;
   public String baseUrl;
   public String rootUrl;
   public JsonObject schemas;

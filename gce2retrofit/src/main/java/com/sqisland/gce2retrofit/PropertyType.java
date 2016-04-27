@@ -12,6 +12,9 @@ public class PropertyType {
     }
 
     if ("string".equals(type)) {
+      if ("int64".equals(format)) {
+        return "Integer";
+      }
       return "String";
     }
 
@@ -31,6 +34,9 @@ public class PropertyType {
         return "Float";
       }
       if ("int32".equals(format)) {
+        return "Integer";
+      }
+      if ("int64".equals(format)) {
         return "Integer";
       }
     }
